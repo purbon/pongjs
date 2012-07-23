@@ -1,0 +1,223 @@
+(function() {
+  var ctx   = undefined;
+  var x     = undefined;
+  var y     = undefined;
+  var size  = undefined;
+  var score = undefined;
+  var color = "red";
+  var mode  = undefined;
+  Player = function(ctx, x, mode) {
+    this.mode = mode ? mode : 'manual';
+    this.ctx  = ctx;
+    this.x    = x;
+    this.y    = 200;
+    this.size = 20;
+    this.score = 0;
+    this.color = "red";
+    this.ctx.fillStyle= this.color;
+    this.ctx.fillRect(this.x,this.y,this.size,130);
+    if (this.mode == 'manual') {
+      document.onkeydown = this.key_event;
+    } else if (this.mode == 'automatic') {
+      this.set_automatic_mode();
+    }
+  };
+
+  Player.prototype.set_automatic_mode = function() {
+    var me = this;
+    setInterval(function() {
+        var min = me.y;
+        var max = me.y+130;
+        if (game.ball.y>max) {
+          me.move(10);
+        } else if (game.ball.y<min) {
+          me.move(-10);
+        }
+    }, 10);
+  };
+
+  Player.prototype.move = function(up) {
+    if (this.y < 10) {
+      this.y = 11;
+      return;
+    }
+    else if (this.y > 403) {
+      this.y = 403;
+      return;
+    }
+    this.ctx.clearRect(this.x, this.y-11, this.size, 151);
+    this.y = this.y + up;
+    this.ctx.fillStyle = this.color;
+    this.ctx.fillRect(this.x, this.y, this.size, 130);
+  }
+
+  Player.prototype.key_event = function(e) {
+    var game = window.game;
+    if (e.keyCode == 40) {
+      game.playerA.move(+10);
+    } else if (e.keyCode == 38) {
+      game.playerA.move(-10);
+    }
+  };
+}());
+
+(function() {
+  var ctx = undefined;
+  var x   = undefined;
+  var y   = undefined;
+  Ball = function(ctx) {
+    this.ctx = ctx;
+    this.x     = 350;
+    this.y     = 300;
+    this.signx = 1;
+    this.signy = 0;
+    this.intervalId = -1;
+    this.paint();
+  };
+
+  Ball.prototype.set = function(x,y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  Ball.prototype.move = function() {
+    var game = window.game;
+    var me = game.ball;
+    this.intervalId = setInterval(function() {
+      me.clear();
+      if (me.x == 790) {
+        var min = game.playerB.y;
+        var max = game.playerB.y+130;
+        if (me.y>max || me.y<min) {
+          // score;
+          game.score('A');
+          game.restart();
+          clearInterval(me.intervalId);
+        } else {
+          me.signx = -1;
+          me.signy = me.yorder();
+        }
+      } else if (me.x == 26) {
+        var min = game.playerA.y;
+        var max = game.playerA.y+130;
+        if (me.y>max || me.y<min) {
+          //score
+          game.score('B');
+          game.restart();
+          clearInterval(me.intervalId);
+        } else {
+          me.signx = 1;
+          me.signy = me.yorder();
+        }
+      }
+      if (me.y == 5) {
+        me.signy = 1;
+      } else if (me.y == 540) {
+        me.signy = -1;
+      }
+      me.x = me.x + me.signx;
+      me.y = me.y + me.signy;
+      me.paint();
+    }, 10);
+  }
+
+  Ball.prototype.stop = function() {
+   clearInterval(this.intervalId);
+  }
+
+  Ball.prototype.yorder = function() {
+      var rand = Math.floor(Math.random()*3);
+     if ( rand < 2 ) {
+      return rand;
+     }
+     return -1;
+  }
+
+  Ball.prototype.paint = function() {
+    this.ctx.beginPath();
+    this.ctx.arc(this.x,this.y,5,0*Math.PI,2*Math.PI);
+    this.ctx.closePath();
+    this.ctx.fillStyle="white";
+    this.ctx.fill();
+    this.ctx.stroke();
+  };
+
+  Ball.prototype.clear = function() {
+    var me = this;
+    me.ctx.beginPath();
+    me.ctx.clearRect(me.x-6, me.y-6, 12, 12);
+    me.ctx.closePath();
+  };
+}());
+
+function Game() {
+  this.ctx = undefined;
+  this.playerA = undefined;
+  this.playerB = undefined;
+  this.started = false;
+};
+
+Game.prototype.initialize = function() {
+  var c=document.getElementById("game");
+  this.ctx=c.getContext("2d");
+  this.players();
+  this.ball();
+};
+
+Game.prototype.start = function() {
+  startButton = document.getElementById('start');
+  startButton.textContent = 'Pause';
+  this.ball.move();
+  this.started = true;
+}
+
+Game.prototype.pause = function () {
+  startButton = document.getElementById('start');
+  startButton.textContent = 'Start';
+  this.ball.stop();
+  this.started = false;
+}
+
+Game.prototype.restart = function() {
+  this.ball.clear();
+  this.ball.set(350,300);
+  this.ball.paint();
+  this.pause();
+};
+
+Game.prototype.players = function() {
+  this.playerA = new Player(this.ctx, 0, 'manual');
+  this.playerB = new Player(this.ctx, 800, 'automatic');
+};
+
+Game.prototype.ball = function() {
+  this.ball = new Ball(this.ctx);
+};
+
+Game.prototype.score = function(player) {
+  if (player == 'A') {
+    this.playerA.score += 1;
+  } else if (player == 'B') {
+    this.playerB.score += 1;
+  }
+  var panel = document.getElementById('score');
+  panel.innerHTML = 'A: '+this.get_score('A')+" - B:"+this.get_score('B');
+}
+
+
+
+Game.prototype.get_score = function(player) {
+  return (player == 'A' ? this.playerA.score : this.playerB.score);
+}
+
+window.game = new Game();
+window.game.initialize();
+
+startButton = document.getElementById('start');
+startButton.onclick = function() {
+  if (!game.started) {
+    game.start();
+  } else {
+    game.pause();
+  }
+}
