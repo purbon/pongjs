@@ -12,6 +12,9 @@ exercise to workout some canvas HTML 5 cool features.</p>
 </ul>
 </p>
 <p>To start, and pause, use the button below or your space bar</p>
+
+<p>Wanna play?: <a href="http://www.purbon.com/pongjs/">demo</a></p>
+
 <p>Code available at <a href="https://github.com/purbon/pongjs">github</a> and <a href="https://github.com/purbon/pongjs/blob/master/js/game.js">here</a></p>
 </div>
 
