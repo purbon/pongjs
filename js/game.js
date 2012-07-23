@@ -27,16 +27,19 @@
         } else if (game.ball.y<min) {
           me.move(-7-steps);
         }
-    }, 5+Math.floor(Math.random()*5));
+    }, 13-Math.floor(Math.random()*3));
   };
 
   Player.prototype.move = function(up) {
+    var game = window.game;
+    var size = game.size();
+
     if (this.y < 10) {
       this.y = 11;
       return;
     }
-    else if (this.y > 403) {
-      this.y = 403;
+    else if (this.y > size['height']-145) {
+      this.y = size['height']-145;
       return;
     }
     this.ctx.clearRect(this.x, this.y-11, this.size, 151);
@@ -56,9 +59,6 @@
 }());
 
 (function() {
-  var ctx = undefined;
-  var x   = undefined;
-  var y   = undefined;
   Ball = function(ctx) {
     this.ctx = ctx;
     this.x     = 350;
@@ -79,11 +79,11 @@
     var me = game.ball;
     this.intervalId = setInterval(function() {
       me.clear();
-      if (me.x == 790) {
+      var size = game.size();
+      if (me.x == size['width']-10) {
         var min = game.playerB.y;
         var max = game.playerB.y+130;
         if (me.y>max || me.y<min) {
-          // score;
           game.score('A');
           game.restart();
           clearInterval(me.intervalId);
@@ -95,7 +95,6 @@
         var min = game.playerA.y;
         var max = game.playerA.y+130;
         if (me.y>max || me.y<min) {
-          //score
           game.score('B');
           game.restart();
           clearInterval(me.intervalId);
@@ -106,13 +105,13 @@
       }
       if (me.y == 5) {
         me.signy = 1;
-      } else if (me.y == 540) {
+      } else if (me.y == size['height']-10) {
         me.signy = -1;
       }
       me.x = me.x + me.signx;
       me.y = me.y + me.signy;
       me.paint();
-    }, 10);
+    }, 5);
   }
 
   Ball.prototype.stop = function() {
@@ -151,6 +150,8 @@
   var started = false;
 
   Game = function() {
+    this.width = 800,
+    this.height = 580;
     this.started = false;
     var c=document.getElementById("game");
     this.ctx=c.getContext("2d");
@@ -162,6 +163,10 @@
         (me.started ? me.pause() : me.start());
       }
     };
+  };
+
+  Game.prototype.size = function() {
+    return { width: this.width, height: this.height };
   };
 
   Game.prototype.start = function() {
